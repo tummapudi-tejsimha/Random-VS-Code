@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Dum-O-Meter — Biryani Rating Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500;1,9..144,700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep: #260a0f;
+    --bg-deep-2: #46101c;
+    --bg-deep-3: #611b1b;
+    --saffron: #e8a33d;
+    --turmeric: #f2b705;
+    --chili: #d6482f;
+    --cardamom: #7fa37a;
+    --cream: #fbf1df;
+    --cream-dim: #d9c7ab;
+    --ink: #2a1210;
+    --glass-fill: rgba(251, 241, 223, 0.07);
+    --glass-fill-strong: rgba(251, 241, 223, 0.12);
+    --glass-border: rgba(251, 241, 223, 0.16);
+    --glass-shadow: rgba(10, 2, 4, 0.55);
+    --radius-lg: 26px;
+    --radius-md: 16px;
+    --radius-sm: 10px;
+  }
+
+  *{ box-sizing: border-box; }
+  html, body{ margin:0; padding:0; }
+
+  body{
+    font-family: 'Work Sans', sans-serif;
+    color: var(--cream);
+    background:
+      radial-gradient(ellipse 900px 600px at 12% -10%, rgba(232,163,61,0.20), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(214,72,47,0.22), transparent 55%),
+      radial-gradient(ellipse 800px 900px at 50% 120%, rgba(127,163,122,0.10), transparent 60%),
+      linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-deep-2) 55%, var(--bg-deep-3) 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* speck texture, like flecks of masala on a dark plate */
+  .grain{
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+    background-image:
+      radial-gradient(1.5px 1.5px at 20% 30%, rgba(242,183,5,0.35), transparent 60%),
+      radial-gradient(1.5px 1.5px at 75% 15%, rgba(214,72,47,0.35), transparent 60%),
+      radial-gradient(1px 1px at 60% 70%, rgba(251,241,223,0.25), transparent 60%),
+      radial-gradient(1.5px 1.5px at 35% 85%, rgba(242,183,5,0.25), transparent 60%),
+      radial-gradient(1px 1px at 90% 55%, rgba(251,241,223,0.2), transparent 60%),
+      radial-gradient(1.5px 1.5px at 10% 65%, rgba(214,72,47,0.2), transparent 60%);
+    background-size: 340px 340px;
+  }
+
+  .wrap{
+    position: relative;
+    z-index: 1;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 24px 90px;
+  }
+
+  /* ---------- HERO ---------- */
+  header.hero{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+    margin-bottom: 54px;
+    flex-wrap: wrap;
+  }
+
+  .hero-copy{ flex: 1 1 480px; min-width: 280px; }
+
+  .eyebrow{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--saffron);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .eyebrow::before{
+    content: "";
+    width: 26px;
+    height: 1px;
+    background: var(--saffron);
+    display: inline-block;
+  }
+
+  h1.title{
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: clamp(34px, 5vw, 58px);
+    line-height: 1.04;
+    margin: 0 0 18px;
+    letter-spacing: -0.01em;
+  }
+  h1.title em{
+    font-style: italic;
+    font-weight: 500;
+    color: var(--turmeric);
+  }
+
+  .hero-sub{
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--cream-dim);
+    max-width: 46ch;
+    margin: 0;
+  }
+
+  /* the pot illustration */
+  .pot-wrap{
+    flex: 0 0 auto;
+    width: 230px;
+    height: 230px;
+    position: relative;
+  }
+  .steam{
+    position: absolute;
+    bottom: 62%;
+    width: 6px;
+    border-radius: 6px;
+    background: linear-gradient(to top, rgba(251,241,223,0.55), transparent);
+    filter: blur(1.5px);
+    animation: rise 3.4s ease-in-out infinite;
+  }
+  .steam.s1{ left: 34%; height: 60px; animation-delay: 0s; }
+  .steam.s2{ left: 48%; height: 78px; animation-delay: 0.9s; }
+  .steam.s3{ left: 60%; height: 54px; animation-delay: 1.8s; }
+  @keyframes rise{
+    0%   { transform: translateY(0) scaleX(1); opacity: 0; }
+    18%  { opacity: 0.9; }
+    100% { transform: translateY(-70px) scaleX(1.6); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .steam{ animation: none; opacity: 0.35; }
+  }
+
+  /* ---------- GLASS PANEL BASE ---------- */
+  .glass{
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    box-shadow: 0 24px 60px -20px var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  /* ---------- CONSOLE ---------- */
+  .console{
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 0;
+    overflow: hidden;
+    margin-bottom: 40px;
+  }
+  @media (max-width: 860px){
+    .console{ grid-template-columns: 1fr; }
+  }
+
+  .console-form{
+    padding: 40px 40px 34px;
+    border-right: 1px solid var(--glass-border);
+  }
+  @media (max-width: 860px){
+    .console-form{ border-right: none; border-bottom: 1px solid var(--glass-border); }
+  }
+
+  .panel-label{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cardamom);
+    margin: 0 0 22px;
+  }
+
+  .field{ margin-bottom: 20px; }
+  .field label{
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--cream);
+    margin-bottom: 8px;
+  }
+  .two-col{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 500px){ .two-col{ grid-template-columns: 1fr; } }
+
+  input[type="text"], textarea{
+    width: 100%;
+    background: rgba(0,0,0,0.18);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    padding: 11px 13px;
+    color: var(--cream);
+    font-family: 'Work Sans', sans-serif;
+    font-size: 14.5px;
+    outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  input[type="text"]::placeholder, textarea::placeholder{ color: rgba(251,241,223,0.35); }
+  input[type="text"]:focus, textarea:focus{
+    border-color: var(--turmeric);
+    background: rgba(0,0,0,0.28);
+  }
+  textarea{ resize: vertical; min-height: 74px; line-height: 1.5; }
+
+  /* sliders */
+  .sliders{ margin-top: 8px; }
+  .slider-row{ margin-bottom: 18px; }
+  .slider-row .row-top{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 7px;
+  }
+  .slider-row .row-top .name{ font-size: 14px; font-weight: 600; }
+  .slider-row .row-top .name .hint{
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--cream-dim);
+    margin-top: 1px;
+  }
+  .slider-row .row-top .val{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    color: var(--turmeric);
+    min-width: 32px;
+    text-align: right;
+  }
+
+  input[type="range"]{
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 8px;
+    background: linear-gradient(to right, var(--chili) var(--fill,50%), rgba(255,255,255,0.12) var(--fill,50%));
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--turmeric);
+    border: 3px solid var(--bg-deep);
+    box-shadow: 0 0 0 1px rgba(251,241,223,0.4), 0 2px 8px rgba(0,0,0,0.4);
+    cursor: pointer;
+    margin-top: -6px;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--turmeric);
+    border: 3px solid var(--bg-deep);
+    cursor: pointer;
+  }
+  input[type="range"]::-moz-range-track{
+    height: 6px; border-radius: 8px; background: rgba(255,255,255,0.12);
+  }
+  input[type="range"]::-moz-range-progress{
+    height: 6px; border-radius: 8px; background: var(--chili);
+  }
+
+  .save-btn{
+    margin-top: 10px;
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(242,183,5,0.5);
+    background: linear-gradient(135deg, rgba(242,183,5,0.24), rgba(214,72,47,0.22));
+    color: var(--cream);
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .save-btn:hover{
+    background: linear-gradient(135deg, rgba(242,183,5,0.36), rgba(214,72,47,0.32));
+    box-shadow: 0 8px 24px -8px rgba(242,183,5,0.4);
+  }
+  .save-btn:active{ transform: scale(0.985); }
+  .save-btn:disabled{ opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+  .form-msg{
+    font-size: 12.5px;
+    color: var(--chili);
+    margin-top: 8px;
+    min-height: 16px;
+  }
+
+  /* ---------- GAUGE SIDE ---------- */
+  .console-gauge{
+    padding: 40px 36px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: radial-gradient(circle at 50% 20%, rgba(242,183,5,0.08), transparent 60%);
+  }
+
+  .gauge-holder{ position: relative; width: 210px; height: 210px; margin-bottom: 6px; }
+  .gauge-holder svg{ width: 100%; height: 100%; transform: rotate(-90deg); }
+  .gauge-track{ fill: none; stroke: rgba(255,255,255,0.09); stroke-width: 14; }
+  .gauge-fill{
+    fill: none;
+    stroke: url(#gaugeGradient);
+    stroke-width: 14;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.35s ease;
+  }
+  .gauge-center{
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .gauge-score{
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 46px;
+    line-height: 1;
+  }
+  .gauge-of{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--cream-dim);
+    margin-top: 2px;
+  }
+
+  .gauge-rank{
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 21px;
+    color: var(--turmeric);
+    margin: 14px 0 6px;
+  }
+  .gauge-verdict{
+    font-size: 13.5px;
+    color: var(--cream-dim);
+    max-width: 30ch;
+    line-height: 1.5;
+  }
+
+  /* ---------- SAVED REVIEWS ---------- */
+  .reviews-head{
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 8px 0 22px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .reviews-head h2{
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 26px;
+    margin: 0;
+  }
+  .reviews-count{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--cream-dim);
+  }
+
+  .empty-state{
+    padding: 46px 30px;
+    text-align: center;
+    color: var(--cream-dim);
+    font-size: 14.5px;
+  }
+  .empty-state .em{
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--saffron);
+    font-size: 17px;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .review-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 18px;
+  }
+
+  .review-card{
+    padding: 24px;
+    position: relative;
+    animation: card-in 0.4s ease both;
+  }
+  @keyframes card-in{
+    from{ opacity: 0; transform: translateY(10px); }
+    to{ opacity: 1; transform: translateY(0); }
+  }
+
+  .review-top{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .review-name{
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 19px;
+    line-height: 1.2;
+    margin: 0 0 3px;
+  }
+  .review-source{
+    font-size: 12.5px;
+    color: var(--cream-dim);
+  }
+
+  .score-badge{
+    flex-shrink: 0;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    font-family: 'JetBrains Mono', monospace;
+    border: 2px solid var(--badge-color, var(--turmeric));
+    color: var(--badge-color, var(--turmeric));
+    font-weight: 700;
+    font-size: 16px;
+    background: rgba(0,0,0,0.15);
+  }
+
+  .review-rank{
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--turmeric);
+    font-size: 14.5px;
+    margin: 0 0 12px;
+  }
+
+  .mini-bars{ display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .mini-bar-row{ display: flex; align-items: center; gap: 8px; }
+  .mini-bar-row .mb-label{
+    font-size: 11px;
+    color: var(--cream-dim);
+    width: 76px;
+    flex-shrink: 0;
+  }
+  .mini-bar-track{
+    flex: 1;
+    height: 4px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.1);
+    overflow: hidden;
+  }
+  .mini-bar-fill{
+    height: 100%;
+    background: linear-gradient(to right, var(--chili), var(--turmeric));
+    border-radius: 4px;
+  }
+
+  .review-text{
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--cream);
+    border-top: 1px solid var(--glass-border);
+    padding-top: 12px;
+    margin: 0 0 14px;
+  }
+
+  .delete-btn{
+    background: none;
+    border: none;
+    color: var(--cream-dim);
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.15s ease;
+  }
+  .delete-btn:hover{ color: var(--chili); }
+
+  /* focus visibility */
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible{
+    outline: 2px solid var(--turmeric);
+    outline-offset: 2px;
+  }
+
+  footer{
+    margin-top: 60px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: rgba(251,241,223,0.35);
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Field Notes From The Dum Pot</p>
+      <h1 class="title">Rate the biryani.<br><em>Rate it properly.</em></h1>
+      <p class="hero-sub">Five stars means nothing. Anyone can slap five stars on a plate of orange rice and call it a day. This is the Dum-O-Meter: six categories that actually separate a legendary pot from a rice crime, boiled down to one honest number.</p>
+    </div>
+    <div class="pot-wrap" aria-hidden="true">
+      <svg viewBox="0 0 200 200" width="230" height="230">
+        <ellipse cx="100" cy="150" rx="70" ry="14" fill="rgba(0,0,0,0.35)"></ellipse>
+        <path d="M40 90 Q40 150 70 158 L130 158 Q160 150 160 90 Z" fill="#3a1210" stroke="rgba(251,241,223,0.15)" stroke-width="1.5"></path>
+        <ellipse cx="100" cy="90" rx="60" ry="16" fill="#5c1c1c" stroke="rgba(251,241,223,0.2)" stroke-width="1.5"></ellipse>
+        <ellipse cx="100" cy="87" rx="52" ry="12" fill="#e8a33d"></ellipse>
+        <circle cx="80" cy="85" r="3.2" fill="#c1440e"></circle>
+        <circle cx="112" cy="90" r="3.2" fill="#c1440e"></circle>
+        <circle cx="96" cy="82" r="2.6" fill="#7fa37a"></circle>
+        <circle cx="120" cy="83" r="2.6" fill="#7fa37a"></circle>
+        <circle cx="70" cy="90" r="2.6" fill="#f2b705"></circle>
+        <circle cx="105" cy="93" r="2.6" fill="#f2b705"></circle>
+        <rect x="28" y="82" width="14" height="7" rx="3.5" fill="#3a1210" stroke="rgba(251,241,223,0.15)"></rect>
+        <rect x="158" y="82" width="14" height="7" rx="3.5" fill="#3a1210" stroke="rgba(251,241,223,0.15)"></rect>
+      </svg>
+      <div class="steam s1"></div>
+      <div class="steam s2"></div>
+      <div class="steam s3"></div>
+    </div>
+  </header>
+
+  <!-- CONSOLE -->
+  <section class="console glass">
+    <div class="console-form">
+      <p class="panel-label">01 — Log a plate</p>
+
+      <div class="two-col">
+        <div class="field">
+          <label for="dishName">What was it</label>
+          <input type="text" id="dishName" placeholder="e.g. Hyderabadi Chicken Dum">
+        </div>
+        <div class="field">
+          <label for="dishSource">Where from</label>
+          <input type="text" id="dishSource" placeholder="e.g. Paradise, or Mom's kitchen">
+        </div>
+      </div>
+
+      <div class="sliders" id="sliderContainer"></div>
+
+      <div class="field" style="margin-top: 4px;">
+        <label for="reviewText">The actual review</label>
+        <textarea id="reviewText" placeholder="Was the dum sealed properly or did they cheat with a lid and a prayer? Was there a burnt bottom layer worth fighting your cousins over? Say it here."></textarea>
+      </div>
+
+      <button class="save-btn" id="saveBtn">Log this plate</button>
+      <div class="form-msg" id="formMsg"></div>
+    </div>
+
+    <div class="console-gauge">
+      <p class="panel-label" style="margin-bottom: 14px;">02 — Live reading</p>
+      <div class="gauge-holder">
+        <svg viewBox="0 0 200 200">
+          <defs>
+            <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#d6482f"></stop>
+              <stop offset="55%" stop-color="#f2b705"></stop>
+              <stop offset="100%" stop-color="#7fa37a"></stop>
+            </linearGradient>
+          </defs>
+          <circle class="gauge-track" cx="100" cy="100" r="86"></circle>
+          <circle class="gauge-fill" id="gaugeFill" cx="100" cy="100" r="86"></circle>
+        </svg>
+        <div class="gauge-center">
+          <div class="gauge-score" id="gaugeScore">0</div>
+          <div class="gauge-of">OUT OF 100</div>
+        </div>
+      </div>
+      <div class="gauge-rank" id="gaugeRank">Undetermined</div>
+      <div class="gauge-verdict" id="gaugeVerdict">Move a slider. Any slider. The pot is waiting.</div>
+    </div>
+  </section>
+
+  <!-- SAVED REVIEWS -->
+  <section>
+    <div class="reviews-head">
+      <h2>The logbook</h2>
+      <span class="reviews-count" id="reviewsCount">0 plates on record</span>
+    </div>
+    <div id="reviewsHolder">
+      <div class="empty-state glass">
+        <span class="em">Nothing logged yet.</span>
+        Rate a plate above and it'll show up here, forever judged.
+      </div>
+    </div>
+  </section>
+
+  <footer>DUM-O-METER &middot; six categories, one honest number &middot; no stars were used in the making of this app</footer>
+
+</div>
+
+<script>
+  // ---------- CATEGORY DEFINITIONS ----------
+  // weight sums to 1; each raw slider is 0-10
+  const CATEGORIES = [
+    { key: 'masala',  name: 'Masala depth',        hint: 'Layered or one-note',        weight: 0.20 },
+    { key: 'rice',    name: 'Rice texture',        hint: 'Separate grains or mush',     weight: 0.20 },
+    { key: 'ratio',   name: 'Meat-to-rice ratio',  hint: 'Buried treasure or bare rice',weight: 0.18 },
+    { key: 'dum',     name: 'Dum authenticity',    hint: 'Sealed pot or a lid and a prayer', weight: 0.20 },
+    { key: 'heat',    name: 'Spice heat',          hint: 'Builds properly, no gimmick', weight: 0.12 },
+    { key: 'value',   name: 'Value per plate',     hint: 'Worth the bill', weight: 0.10 },
+  ];
+
+  const RANKS = [
+    { min: 92, title: 'Legendary Dum',        color: '#7fa37a', verdict: "This is the plate people drive across town for. Frame the receipt." },
+    { min: 80, title: 'Certified Banger',     color: '#f2b705', verdict: "Confidently in banger territory. Minor notes, no real complaints." },
+    { min: 65, title: 'Solid Weeknight Plate',color: '#e8a33d', verdict: "Reliable. Not a special occasion, but you'd order it again without thinking twice." },
+    { min: 48, title: 'Decent, Not Dawat-Worthy', color: '#d6482f', verdict: "Edible and forgettable. Would not survive a family gathering comparison." },
+    { min: 0,  title: 'Rice Crime',           color: '#a83232', verdict: "Somebody owes the rice an apology. File a report." },
+  ];
+
+  function getRank(score){
+    return RANKS.find(r => score >= r.min);
+  }
+
+  // ---------- BUILD SLIDERS ----------
+  const sliderContainer = document.getElementById('sliderContainer');
+  const state = {};
+
+  CATEGORIES.forEach(cat => {
+    state[cat.key] = 5;
+
+    const row = document.createElement('div');
+    row.className = 'slider-row';
+    row.innerHTML = `
+      <div class="row-top">
+        <span class="name">${cat.name}<span class="hint">${cat.hint}</span></span>
+        <span class="val" id="val-${cat.key}">5</span>
+      </div>
+      <input type="range" min="0" max="10" step="1" value="5" id="slider-${cat.key}">
+    `;
+    sliderContainer.appendChild(row);
+  });
+
+  function currentScore(){
+    let total = 0;
+    CATEGORIES.forEach(cat => {
+      total += state[cat.key] * cat.weight;
+    });
+    return Math.round(total * 10); // scale 0-10 avg -> 0-100
+  }
+
+  // ---------- GAUGE ----------
+  const gaugeFill = document.getElementById('gaugeFill');
+  const gaugeScoreEl = document.getElementById('gaugeScore');
+  const gaugeRankEl = document.getElementById('gaugeRank');
+  const gaugeVerdictEl = document.getElementById('gaugeVerdict');
+  const CIRC = 2 * Math.PI * 86;
+  gaugeFill.style.strokeDasharray = `0 ${CIRC}`;
+
+  function updateGauge(animateFromZero){
+    const score = currentScore();
+    const frac = score / 100;
+    gaugeFill.style.strokeDasharray = `${frac * CIRC} ${CIRC}`;
+    gaugeScoreEl.textContent = score;
+    const rank = getRank(score);
+    gaugeRankEl.textContent = rank.title;
+    gaugeRankEl.style.color = rank.color;
+    gaugeVerdictEl.textContent = rank.verdict;
+  }
+
+  CATEGORIES.forEach(cat => {
+    const slider = document.getElementById(`slider-${cat.key}`);
+    const valEl = document.getElementById(`val-${cat.key}`);
+    function paint(){
+      const pct = (slider.value / 10) * 100;
+      slider.style.setProperty('--fill', pct + '%');
+    }
+    paint();
+    slider.addEventListener('input', () => {
+      state[cat.key] = Number(slider.value);
+      valEl.textContent = slider.value;
+      paint();
+      updateGauge();
+    });
+  });
+
+  updateGauge();
+
+  // ---------- SAVE / LOGBOOK ----------
+  const reviews = [];
+  const reviewsHolder = document.getElementById('reviewsHolder');
+  const reviewsCount = document.getElementById('reviewsCount');
+  const saveBtn = document.getElementById('saveBtn');
+  const formMsg = document.getElementById('formMsg');
+
+  function renderReviews(){
+    if(reviews.length === 0){
+      reviewsHolder.innerHTML = `
+        <div class="empty-state glass">
+          <span class="em">Nothing logged yet.</span>
+          Rate a plate above and it'll show up here, forever judged.
+        </div>`;
+      reviewsCount.textContent = '0 plates on record';
+      return;
+    }
+
+    reviewsCount.textContent = `${reviews.length} plate${reviews.length === 1 ? '' : 's'} on record`;
+
+    const grid = document.createElement('div');
+    grid.className = 'review-grid';
+
+    reviews.forEach(r => {
+      const rank = getRank(r.score);
+      const card = document.createElement('article');
+      card.className = 'review-card glass';
+
+      const barsHtml = CATEGORIES.map(cat => `
+        <div class="mini-bar-row">
+          <span class="mb-label">${cat.name}</span>
+          <div class="mini-bar-track">
+            <div class="mini-bar-fill" style="width:${r.ratings[cat.key] * 10}%"></div>
+          </div>
+        </div>
+      `).join('');
+
+      card.innerHTML = `
+        <div class="review-top">
+          <div>
+            <p class="review-name">${escapeHtml(r.name)}</p>
+            <p class="review-source">${escapeHtml(r.source || 'Source unlisted')}</p>
+          </div>
+          <div class="score-badge" style="--badge-color:${rank.color}">${r.score}</div>
+        </div>
+        <p class="review-rank">${rank.title}</p>
+        <div class="mini-bars">${barsHtml}</div>
+        ${r.text ? `<p class="review-text">${escapeHtml(r.text)}</p>` : ''}
+        <button class="delete-btn" data-id="${r.id}">strike from record</button>
+      `;
+      grid.appendChild(card);
+    });
+
+    reviewsHolder.innerHTML = '';
+    reviewsHolder.appendChild(grid);
+
+    reviewsHolder.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const idx = reviews.findIndex(r => String(r.id) === id);
+        if(idx > -1){ reviews.splice(idx, 1); renderReviews(); }
+      });
+    });
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  saveBtn.addEventListener('click', () => {
+    const nameInput = document.getElementById('dishName');
+    const sourceInput = document.getElementById('dishSource');
+    const textInput = document.getElementById('reviewText');
+
+    const name = nameInput.value.trim();
+    if(!name){
+      formMsg.textContent = 'Give the plate a name first. It earned that much.';
+      nameInput.focus();
+      return;
+    }
+    formMsg.textContent = '';
+
+    const ratingsSnapshot = {};
+    CATEGORIES.forEach(cat => { ratingsSnapshot[cat.key] = state[cat.key]; });
+
+    reviews.unshift({
+      id: Date.now(),
+      name,
+      source: sourceInput.value.trim(),
+      text: textInput.value.trim(),
+      ratings: ratingsSnapshot,
+      score: currentScore(),
+    });
+
+    renderReviews();
+
+    // reset form, but leave sliders where they are for the next plate to tweak from
+    nameInput.value = '';
+    sourceInput.value = '';
+    textInput.value = '';
+    nameInput.focus();
+  });
+</script>
+
+</body>
+</html>
