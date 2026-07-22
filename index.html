@@ -196,6 +196,20 @@
 
   .form-msg{ font-size: 12.5px; color: var(--chili); margin-top: 8px; min-height: 16px; font-weight: 600; }
 
+  .identity-chip{
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    background: rgba(0,0,0,0.22); border: 1.5px dashed var(--line); padding: 10px 13px;
+  }
+  .identity-chip span{ font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--turmeric); }
+  .shuffle-btn{
+    background: none; border: 1px solid var(--line); color: var(--cream-dim);
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 5px 9px; cursor: pointer; transition: all 0.12s ease; white-space: nowrap;
+  }
+  .shuffle-btn:hover{ border-color: var(--turmeric); color: var(--cream); }
+
+  .hp-field{ position: absolute; left: -9999px; top: -9999px; height: 0; width: 0; overflow: hidden; }
+
   .console-gauge{
     padding: 38px 34px; display: flex; flex-direction: column; align-items: center; justify-content: center;
     text-align: center; background: radial-gradient(circle at 50% 20%, rgba(242,183,5,0.08), transparent 60%);
@@ -364,15 +378,23 @@
         </div>
       </div>
 
-      <div class="two-col">
-        <div class="field">
-          <label for="reviewerName">Your name</label>
-          <input type="text" id="reviewerName" placeholder="e.g. Tej">
+      <div class="field">
+        <label>Posting as</label>
+        <div class="identity-chip">
+          <span id="handleDisplay">Anonymous</span>
+          <button type="button" class="shuffle-btn" id="shuffleHandle" title="Get a new anonymous handle">🔀 New handle</button>
         </div>
-        <div class="field">
-          <label for="eatenDate">Date eaten</label>
-          <input type="date" id="eatenDate">
-        </div>
+      </div>
+
+      <div class="field">
+        <label for="eatenDate">Date eaten</label>
+        <input type="date" id="eatenDate">
+      </div>
+
+      <!-- honeypot: hidden from real people, bots tend to fill every field -->
+      <div class="hp-field" aria-hidden="true">
+        <label for="companySite">Leave this field blank</label>
+        <input type="text" id="companySite" name="companySite" tabindex="-1" autocomplete="off">
       </div>
 
       <div class="sliders" id="sliderContainer"></div>
@@ -451,8 +473,8 @@
   // SUPABASE CONFIG — replace these two values with your own project's
   // Settings -> API -> Project URL and anon public key.
   // ======================================================================
-  const SUPABASE_URL = 'https://poxppvszveaujilpkaoj.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBveHBwdnN6dmVhdWppbHBrYW9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MzYwMjYsImV4cCI6MjEwMDMxMjAyNn0.8GzQyF44g88E9Fpycf1ia0KM0v0LNMr-rFSXtOLprcE';
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
   const isConfigured = SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
   const sb = isConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -560,6 +582,47 @@
   // default date-eaten to today
   const eatenDateInput = document.getElementById('eatenDate');
   eatenDateInput.value = new Date().toISOString().slice(0, 10);
+
+  // ---------- ANONYMOUS HANDLE ----------
+  // A stable, silly identity per device instead of asking for a real name.
+  const HANDLE_ADJECTIVES = ['Silent','Suspicious','Overzealous','Undercover','Notorious','Devoted','Sleepy','Sharp-Eyed','Relentless','Unbothered','Skeptical','Loyal'];
+  const HANDLE_ROLES = ['Dum Detective','Masala Judge','Rice Whisperer','Biryani Scout','Plate Inspector','Steam Sommelier','Ladle Wielder','Grain Counter','Spice Auditor','Leftovers Guardian'];
+
+  function safeGet(key){ try{ return localStorage.getItem(key); } catch(e){ return null; } }
+  function safeSet(key, val){ try{ localStorage.setItem(key, val); } catch(e){ /* storage unavailable, handle just won't persist */ } }
+
+  function generateHandle(){
+    const adj = HANDLE_ADJECTIVES[Math.floor(Math.random() * HANDLE_ADJECTIVES.length)];
+    const role = HANDLE_ROLES[Math.floor(Math.random() * HANDLE_ROLES.length)];
+    const num = Math.floor(Math.random() * 900) + 100;
+    return `${adj} ${role} #${num}`;
+  }
+
+  let currentHandle = safeGet('dumHandle');
+  if(!currentHandle){ currentHandle = generateHandle(); safeSet('dumHandle', currentHandle); }
+
+  const handleDisplay = document.getElementById('handleDisplay');
+  const shuffleHandleBtn = document.getElementById('shuffleHandle');
+  handleDisplay.textContent = currentHandle;
+  shuffleHandleBtn.addEventListener('click', () => {
+    currentHandle = generateHandle();
+    safeSet('dumHandle', currentHandle);
+    handleDisplay.textContent = currentHandle;
+  });
+
+  // ---------- SPAM GUARDRAILS ----------
+  const SUBMIT_COOLDOWN_MS = 45000; // one plate per device per 45s
+  function msSinceLastSubmit(){
+    const last = Number(safeGet('dumLastSubmit') || 0);
+    return Date.now() - last;
+  }
+  function markSubmitted(){ safeSet('dumLastSubmit', String(Date.now())); }
+
+  function looksLikeGibberish(text){
+    const compact = text.toLowerCase().replace(/[^a-z]/g, '');
+    if(compact.length < 5) return false; // too short to judge, length check handles this separately
+    return new Set(compact).size < 4; // e.g. "aaaaaaaa" or "hahahaha"
+  }
 
   // ---------- DATA ----------
   let reviews = [];
@@ -787,14 +850,27 @@
   saveBtn.addEventListener('click', async () => {
     const nameInput = document.getElementById('dishName');
     const sourceInput = document.getElementById('dishSource');
-    const reviewerInput = document.getElementById('reviewerName');
     const textInput = document.getElementById('reviewText');
+    const honeypot = document.getElementById('companySite');
+
+    if(honeypot.value.trim() !== ''){
+      formMsg.textContent = '';
+      nameInput.value = ''; sourceInput.value = ''; textInput.value = '';
+      return;
+    }
+
+    const cooldownLeft = SUBMIT_COOLDOWN_MS - msSinceLastSubmit();
+    if(cooldownLeft > 0){
+      formMsg.textContent = 'Slow down, one plate at a time. Try again in ' + Math.ceil(cooldownLeft / 1000) + 's.';
+      return;
+    }
 
     const name = nameInput.value.trim();
-    const reviewerName = reviewerInput.value.trim();
+    const reviewText = textInput.value.trim();
 
-    if(!name){ formMsg.textContent = 'Give the plate a name first. It earned that much.'; nameInput.focus(); return; }
-    if(!reviewerName){ formMsg.textContent = 'Add your name so people know whose taste to trust.'; reviewerInput.focus(); return; }
+    if(name.length < 2){ formMsg.textContent = 'Give the plate a real name first. It earned that much.'; nameInput.focus(); return; }
+    if(reviewText.length < 15){ formMsg.textContent = 'Write an actual sentence or two. One word is not a review.'; textInput.focus(); return; }
+    if(looksLikeGibberish(reviewText)){ formMsg.textContent = 'That review does not look like real words. Try again.'; textInput.focus(); return; }
     formMsg.textContent = '';
 
     const ratingsSnapshot = {};
@@ -805,9 +881,9 @@
     const payload = {
       dish_name: name,
       source: sourceInput.value.trim(),
-      reviewer_name: reviewerName,
+      reviewer_name: currentHandle,
       eaten_date: eatenDateInput.value || null,
-      review_text: textInput.value.trim(),
+      review_text: reviewText,
       score, personality,
       masala: ratingsSnapshot.masala, rice: ratingsSnapshot.rice, ratio: ratingsSnapshot.ratio,
       dum: ratingsSnapshot.dum, heat: ratingsSnapshot.heat, value: ratingsSnapshot.value,
@@ -825,13 +901,14 @@
       } else {
         newReview = {
           id: 'local-' + Date.now(),
-          name, source: payload.source, reviewerName, eatenDate: payload.eaten_date,
+          name, source: payload.source, reviewerName: currentHandle, eatenDate: payload.eaten_date,
           text: payload.review_text, ratings: ratingsSnapshot, score, personality,
           createdAt: new Date().toISOString(),
         };
       }
       mySessionIds.add(newReview.id);
       reviews.unshift(newReview);
+      markSubmitted();
       renderAll();
 
       nameInput.value = '';
