@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500;1,9..144,700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
     --bg-deep: #260a0f;
@@ -56,7 +57,6 @@
 
   .wrap{ position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 56px 24px 90px; }
 
-  /* ---------- HERO ---------- */
   header.hero{
     display: flex; align-items: center; justify-content: space-between; gap: 40px;
     margin-bottom: 34px; flex-wrap: wrap;
@@ -94,29 +94,19 @@
   }
   @media (prefers-reduced-motion: reduce){ .steam{ animation: none; opacity: 0.35; } }
 
-  /* ---------- TEAR LINE (signature divider) ---------- */
   .tear-line{
-    position: relative;
-    display: flex; align-items: center; gap: 14px;
-    margin: 30px 0;
-    color: var(--cream-dim);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    position: relative; display: flex; align-items: center; gap: 14px; margin: 30px 0;
+    color: var(--cream-dim); font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.12em; text-transform: uppercase;
   }
-  .tear-line .rule{
-    flex: 1; height: 0;
-    border-top: 2px dashed var(--line);
-    position: relative;
-  }
+  .tear-line .rule{ flex: 1; height: 0; border-top: 2px dashed var(--line); position: relative; }
   .tear-line .rule::before, .tear-line .rule::after{
     content: ""; position: absolute; top: -6px; width: 12px; height: 12px; border-radius: 50%;
-    background: var(--bg-deep-2);
-    box-shadow: 0 0 0 1.5px var(--line);
+    background: var(--bg-deep-2); box-shadow: 0 0 0 1.5px var(--line);
   }
   .tear-line .rule::before{ left: -6px; }
   .tear-line .rule::after{ right: -6px; }
 
-  /* ---------- SHARP GLASS PANEL BASE ---------- */
   .glass{
     background: var(--glass-fill);
     border: 1.5px solid var(--line);
@@ -127,7 +117,18 @@
     clip-path: polygon(0 0, calc(100% - var(--notch)) 0, 100% var(--notch), 100% 100%, var(--notch) 100%, 0 calc(100% - var(--notch)));
   }
 
-  /* ---------- CONSOLE ---------- */
+  /* ---------- CONFIG / STATUS BANNER ---------- */
+  .status-banner{
+    padding: 16px 22px; margin-bottom: 26px; font-size: 13.5px; line-height: 1.5;
+    display: none; align-items: flex-start; gap: 12px;
+  }
+  .status-banner.show{ display: flex; }
+  .status-banner.error{ border-color: var(--chili); }
+  .status-banner .dot{ width: 9px; height: 9px; flex-shrink: 0; margin-top: 4px; background: var(--chili); }
+  .status-banner code{
+    font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.3); padding: 1px 5px; font-size: 12px;
+  }
+
   .console{ display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 0; overflow: hidden; margin-bottom: 10px; }
   @media (max-width: 860px){ .console{ grid-template-columns: 1fr; } }
 
@@ -146,13 +147,14 @@
   .two-col{ display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   @media (max-width: 500px){ .two-col{ grid-template-columns: 1fr; } }
 
-  input[type="text"], textarea, select{
+  input[type="text"], input[type="date"], textarea, select{
     width: 100%; background: rgba(0,0,0,0.22); border: 1.5px solid var(--line-dim);
     border-radius: 0; padding: 11px 13px; color: var(--cream); font-family: 'Work Sans', sans-serif;
     font-size: 14.5px; outline: none; transition: border-color 0.15s ease, background 0.15s ease;
   }
+  input[type="date"]{ font-family: 'JetBrains Mono', monospace; font-size: 13.5px; color-scheme: dark; }
   input[type="text"]::placeholder, textarea::placeholder{ color: rgba(251,241,223,0.35); }
-  input[type="text"]:focus, textarea:focus, select:focus{ border-color: var(--turmeric); background: rgba(0,0,0,0.3); }
+  input[type="text"]:focus, input[type="date"]:focus, textarea:focus, select:focus{ border-color: var(--turmeric); background: rgba(0,0,0,0.3); }
   textarea{ resize: vertical; min-height: 70px; line-height: 1.5; }
 
   .sliders{ margin-top: 4px; }
@@ -168,8 +170,7 @@
     outline: none;
   }
   input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 0;
-    transform: rotate(45deg);
+    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 0; transform: rotate(45deg);
     background: var(--turmeric); border: 2px solid var(--bg-deep);
     box-shadow: 0 0 0 1px rgba(251,241,223,0.4), 2px 2px 0 rgba(0,0,0,0.4);
     cursor: pointer; margin-top: -6px;
@@ -183,19 +184,18 @@
 
   .save-btn{
     margin-top: 8px; width: 100%; padding: 14px 20px; border-radius: 0;
-    border: 1.5px solid var(--turmeric);
-    background: var(--chili);
-    color: var(--cream); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13.5px;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    cursor: pointer; transition: transform 0.1s ease, background 0.15s ease, box-shadow 0.15s ease;
+    border: 1.5px solid var(--turmeric); background: var(--chili); color: var(--cream);
+    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13.5px;
+    letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+    transition: transform 0.1s ease, background 0.15s ease, box-shadow 0.15s ease;
     box-shadow: var(--hard-shadow-sm);
   }
   .save-btn:hover{ background: #e8552f; }
   .save-btn:active{ transform: translate(3px, 3px); box-shadow: 1px 1px 0 rgba(10,2,4,0.5); }
+  .save-btn:disabled{ opacity: 0.5; cursor: not-allowed; }
 
   .form-msg{ font-size: 12.5px; color: var(--chili); margin-top: 8px; min-height: 16px; font-weight: 600; }
 
-  /* ---------- GAUGE SIDE ---------- */
   .console-gauge{
     padding: 38px 34px; display: flex; flex-direction: column; align-items: center; justify-content: center;
     text-align: center; background: radial-gradient(circle at 50% 20%, rgba(242,183,5,0.08), transparent 60%);
@@ -211,27 +211,26 @@
   .gauge-rank{ font-family: 'Fraunces', serif; font-style: italic; font-weight: 600; font-size: 20px; color: var(--turmeric); margin: 12px 0 6px; }
   .gauge-verdict{ font-size: 13px; color: var(--cream-dim); max-width: 30ch; line-height: 1.5; }
 
-  /* ---------- STATS STRIP ---------- */
-  .stats-strip{
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
-    margin-bottom: 14px; overflow: hidden;
-  }
+  .stats-strip{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-bottom: 14px; overflow: hidden; }
   @media (max-width: 720px){ .stats-strip{ grid-template-columns: repeat(2, 1fr); } }
   .stat-cell{ padding: 20px 22px; border-right: 1.5px solid var(--line-dim); }
   .stat-cell:last-child{ border-right: none; }
-  @media (max-width: 720px){
-    .stat-cell:nth-child(2){ border-right: none; }
-  }
+  @media (max-width: 720px){ .stat-cell:nth-child(2){ border-right: none; } }
   .stat-num{ font-family: 'Fraunces', serif; font-weight: 700; font-size: 26px; color: var(--turmeric); line-height: 1; }
   .stat-label{ font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cream-dim); margin-top: 6px; }
   .stat-sub{ font-size: 12.5px; color: var(--cream); margin-top: 3px; }
 
-  /* ---------- CONTROLS ROW (sort + filter) ---------- */
-  .controls-row{
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    flex-wrap: wrap; margin: 8px 0 20px;
-  }
+  .controls-row{ display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 8px 0 20px; }
   h2.section-title{ font-family: 'Fraunces', serif; font-weight: 700; font-size: 26px; margin: 0; }
+  .header-actions{ display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+  .refresh-btn{
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 8px 14px; border: 1.5px solid var(--line); background: rgba(0,0,0,0.15); color: var(--cream-dim);
+    cursor: pointer; transition: all 0.12s ease;
+  }
+  .refresh-btn:hover{ border-color: var(--turmeric); color: var(--cream); }
+  .refresh-btn:disabled{ opacity: 0.5; cursor: not-allowed; }
 
   .filter-chips{ display: flex; gap: 8px; flex-wrap: wrap; }
   .chip{
@@ -246,7 +245,6 @@
   .sort-select-wrap label{ font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream-dim); }
   select{ width: auto; padding: 8px 10px; font-size: 12.5px; cursor: pointer; }
 
-  /* ---------- EMPTY / GRID ---------- */
   .empty-state{ padding: 44px 30px; text-align: center; color: var(--cream-dim); font-size: 14.5px; }
   .empty-state .em{ font-family: 'Fraunces', serif; font-style: italic; color: var(--saffron); font-size: 17px; display: block; margin-bottom: 6px; }
 
@@ -258,16 +256,15 @@
   .review-top{ display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
   .review-name{ font-family: 'Fraunces', serif; font-weight: 700; font-size: 19px; line-height: 1.2; margin: 0 0 3px; }
   .review-source{ font-size: 12.5px; color: var(--cream-dim); }
+  .review-meta{ font-size: 11.5px; color: var(--cream-dim); font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
 
   .score-badge{
     flex-shrink: 0; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
-    transform: rotate(45deg);
-    border: 2px solid var(--badge-color, var(--turmeric));
-    background: rgba(0,0,0,0.2);
+    transform: rotate(45deg); border: 2px solid var(--badge-color, var(--turmeric)); background: rgba(0,0,0,0.2);
   }
   .score-badge span{ transform: rotate(-45deg); font-family: 'JetBrains Mono', monospace; color: var(--badge-color, var(--turmeric)); font-weight: 700; font-size: 15px; }
 
-  .review-rank{ font-family: 'Fraunces', serif; font-style: italic; color: var(--turmeric); font-size: 14px; margin: 0 0 4px; }
+  .review-rank{ font-family: 'Fraunces', serif; font-style: italic; color: var(--turmeric); font-size: 14px; margin: 10px 0 4px; }
   .review-personality{
     display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.06em;
     text-transform: uppercase; color: var(--cardamom); border: 1px solid var(--cardamom); padding: 3px 8px; margin-bottom: 12px;
@@ -281,7 +278,7 @@
 
   .review-text{ font-size: 13.5px; line-height: 1.55; color: var(--cream); border-top: 1.5px dashed var(--line-dim); padding-top: 12px; margin: 0 0 14px; }
 
-  .card-actions{ display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .card-actions{ display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 18px; }
   .compare-check{ display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--cream-dim); cursor: pointer; text-transform: uppercase; letter-spacing: 0.04em; }
   .compare-check input{ accent-color: var(--turmeric); cursor: pointer; }
 
@@ -292,7 +289,6 @@
   }
   .delete-btn:hover{ color: var(--chili); }
 
-  /* ---------- COMPARE PANEL ---------- */
   .compare-panel{ padding: 26px 30px; margin-bottom: 30px; display: none; }
   .compare-panel.visible{ display: block; }
   .compare-head{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
@@ -326,7 +322,7 @@
     <div class="hero-copy">
       <p class="eyebrow">Field Notes From The Dum Pot</p>
       <h1 class="title">Rate the biryani.<br><em>Rate it properly.</em></h1>
-      <p class="hero-sub">Five stars means nothing. Anyone can slap five stars on a plate of orange rice and call it a day. This is the Dum-O-Meter: six categories that actually separate a legendary pot from a rice crime, boiled down to one honest number.</p>
+      <p class="hero-sub">Five stars means nothing. Anyone can slap five stars on a plate of orange rice and call it a day. This is the Dum-O-Meter: six categories that actually separate a legendary pot from a rice crime, boiled down to one honest number, logged by everyone who's eaten here.</p>
     </div>
     <div class="pot-wrap" aria-hidden="true">
       <svg viewBox="0 0 200 200" width="230" height="230">
@@ -349,9 +345,10 @@
     </div>
   </header>
 
+  <div class="status-banner glass" id="statusBanner"><span class="dot"></span><span id="statusText"></span></div>
+
   <div class="tear-line"><span class="rule"></span>ENTRY LOG<span class="rule"></span></div>
 
-  <!-- CONSOLE -->
   <section class="console glass">
     <div class="console-form">
       <p class="panel-label">01 — Log a plate</p>
@@ -367,11 +364,22 @@
         </div>
       </div>
 
+      <div class="two-col">
+        <div class="field">
+          <label for="reviewerName">Your name</label>
+          <input type="text" id="reviewerName" placeholder="e.g. Tej">
+        </div>
+        <div class="field">
+          <label for="eatenDate">Date eaten</label>
+          <input type="date" id="eatenDate">
+        </div>
+      </div>
+
       <div class="sliders" id="sliderContainer"></div>
 
       <div class="field" style="margin-top: 4px;">
         <label for="reviewText">The actual review</label>
-        <textarea id="reviewText" placeholder="Share your thoughts on the plate..."></textarea>
+        <textarea id="reviewText" placeholder="Was the dum sealed properly or did they cheat with a lid and a prayer? Was there a burnt bottom layer worth fighting your cousins over? Say it here."></textarea>
       </div>
 
       <button class="save-btn" id="saveBtn">Log this plate</button>
@@ -404,41 +412,51 @@
 
   <div class="tear-line"><span class="rule"></span>THE LOGBOOK<span class="rule"></span></div>
 
-  <!-- STATS -->
   <section class="stats-strip glass" id="statsStrip" style="display:none;"></section>
 
-  <!-- COMPARE -->
   <section class="compare-panel glass" id="comparePanel"></section>
 
-  <!-- SAVED REVIEWS -->
   <section>
     <div class="controls-row">
       <h2 class="section-title">All plates</h2>
-      <div class="sort-select-wrap">
-        <label for="sortSelect">Sort</label>
-        <select id="sortSelect">
-          <option value="newest">Newest first</option>
-          <option value="highest">Highest score</option>
-          <option value="lowest">Lowest score</option>
-          <option value="az">A → Z</option>
-        </select>
+      <div class="header-actions">
+        <button class="refresh-btn" id="refreshBtn">↻ Refresh</button>
+        <div class="sort-select-wrap">
+          <label for="sortSelect">Sort</label>
+          <select id="sortSelect">
+            <option value="newest">Newest first</option>
+            <option value="highest">Highest score</option>
+            <option value="lowest">Lowest score</option>
+            <option value="az">A → Z</option>
+          </select>
+        </div>
       </div>
     </div>
     <div class="filter-chips" id="filterChips" style="margin-bottom: 22px;"></div>
 
     <div id="reviewsHolder">
       <div class="empty-state glass">
-        <span class="em">Nothing logged yet.</span>
-        Rate a plate above and it'll show up here, forever judged.
+        <span class="em">Loading the logbook...</span>
+        Pulling in every plate anyone's rated so far.
       </div>
     </div>
   </section>
 
-  <footer>DUM-O-METER &middot; six categories, one honest number &middot; no stars were used in the making of this app</footer>
+  <footer>DUM-O-METER &middot; six categories, one honest number &middot; shared logbook, everyone's plates</footer>
 
 </div>
 
 <script>
+  // ======================================================================
+  // SUPABASE CONFIG — replace these two values with your own project's
+  // Settings -> API -> Project URL and anon public key.
+  // ======================================================================
+  const SUPABASE_URL = 'https://poxppvszveaujilpkaoj.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBveHBwdnN6dmVhdWppbHBrYW9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MzYwMjYsImV4cCI6MjEwMDMxMjAyNn0.8GzQyF44g88E9Fpycf1ia0KM0v0LNMr-rFSXtOLprcE';
+
+  const isConfigured = SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
+  const sb = isConfigured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
   const CATEGORIES = [
     { key: 'masala',  name: 'Masala depth',        hint: 'Layered or one-note',        weight: 0.20, personality: 'Masala Maximalist' },
     { key: 'rice',    name: 'Rice texture',        hint: 'Separate grains or mush',     weight: 0.20, personality: 'Grain Purist' },
@@ -457,17 +475,36 @@
   ];
 
   function getRank(score){ return RANKS.find(r => score >= r.min); }
-
   function getPersonality(ratings){
     let best = CATEGORIES[0];
     CATEGORIES.forEach(cat => { if(ratings[cat.key] > ratings[best.key]) best = cat; });
     return best.personality;
   }
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : str;
+    return div.innerHTML;
+  }
+  function formatDate(isoDateStr){
+    if(!isoDateStr) return '';
+    const d = new Date(isoDateStr + 'T00:00:00');
+    if(isNaN(d)) return isoDateStr;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
 
-  // ---------- BUILD SLIDERS ----------
+  // ---------- STATUS BANNER ----------
+  const statusBanner = document.getElementById('statusBanner');
+  const statusText = document.getElementById('statusText');
+  function showStatus(html){ statusText.innerHTML = html; statusBanner.classList.add('show'); }
+  function hideStatus(){ statusBanner.classList.remove('show'); }
+
+  if(!isConfigured){
+    showStatus(`Not connected to a database yet. Add your project's URL and anon key to <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> near the top of the script. Until then, plates will show up on screen but won't be saved or shared.`);
+  }
+
+  // ---------- SLIDERS ----------
   const sliderContainer = document.getElementById('sliderContainer');
   const state = {};
-
   CATEGORIES.forEach(cat => {
     state[cat.key] = 5;
     const row = document.createElement('div');
@@ -488,7 +525,6 @@
     return Math.round(total * 10);
   }
 
-  // ---------- GAUGE ----------
   const gaugeFill = document.getElementById('gaugeFill');
   const gaugeScoreEl = document.getElementById('gaugeScore');
   const gaugeRankEl = document.getElementById('gaugeRank');
@@ -521,11 +557,16 @@
   });
   updateGauge();
 
+  // default date-eaten to today
+  const eatenDateInput = document.getElementById('eatenDate');
+  eatenDateInput.value = new Date().toISOString().slice(0, 10);
+
   // ---------- DATA ----------
-  const reviews = [];
+  let reviews = [];
   let activeFilter = 'All';
   let sortMode = 'newest';
   let compareIds = [];
+  const mySessionIds = new Set(); // rows this browser tab created, only these are deletable
 
   const reviewsHolder = document.getElementById('reviewsHolder');
   const statsStrip = document.getElementById('statsStrip');
@@ -534,11 +575,42 @@
   const saveBtn = document.getElementById('saveBtn');
   const formMsg = document.getElementById('formMsg');
   const sortSelect = document.getElementById('sortSelect');
+  const refreshBtn = document.getElementById('refreshBtn');
 
-  function escapeHtml(str){
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+  // maps a Supabase row to the shape the UI works with
+  function rowToReview(row){
+    const ratings = {};
+    CATEGORIES.forEach(cat => { ratings[cat.key] = row[cat.key]; });
+    return {
+      id: row.id,
+      name: row.dish_name,
+      source: row.source,
+      reviewerName: row.reviewer_name,
+      eatenDate: row.eaten_date,
+      text: row.review_text,
+      ratings,
+      score: row.score,
+      personality: row.personality,
+      createdAt: row.created_at,
+    };
+  }
+
+  async function loadReviews(){
+    if(!isConfigured){ renderAll(); return; }
+    refreshBtn.disabled = true;
+    refreshBtn.textContent = '↻ Loading...';
+    try{
+      const { data, error } = await sb.from('reviews').select('*').order('created_at', { ascending: false });
+      if(error) throw error;
+      reviews = (data || []).map(rowToReview);
+      hideStatus();
+    } catch(err){
+      showStatus(`Couldn't load the shared logbook (${escapeHtml(err.message || 'unknown error')}). Check your Supabase URL, anon key, and that the <code>reviews</code> table + RLS policies exist.`);
+    } finally {
+      refreshBtn.disabled = false;
+      refreshBtn.textContent = '↻ Refresh';
+      renderAll();
+    }
   }
 
   function buildFilterChips(){
@@ -547,10 +619,7 @@
       `<button class="chip ${t === activeFilter ? 'active' : ''}" data-tier="${t}">${t}</button>`
     ).join('');
     filterChips.querySelectorAll('.chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        activeFilter = chip.getAttribute('data-tier');
-        renderAll();
-      });
+      chip.addEventListener('click', () => { activeFilter = chip.getAttribute('data-tier'); renderAll(); });
     });
   }
 
@@ -574,13 +643,11 @@
 
   function getFilteredSorted(){
     let list = reviews.slice();
-    if(activeFilter !== 'All'){
-      list = list.filter(r => getRank(r.score).title === activeFilter);
-    }
+    if(activeFilter !== 'All') list = list.filter(r => getRank(r.score).title === activeFilter);
     if(sortMode === 'highest') list.sort((a,b) => b.score - a.score);
     else if(sortMode === 'lowest') list.sort((a,b) => a.score - b.score);
     else if(sortMode === 'az') list.sort((a,b) => a.name.localeCompare(b.name));
-    else list.sort((a,b) => b.id - a.id);
+    else list.sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     return list;
   }
 
@@ -600,20 +667,14 @@
     `).join('');
 
     comparePanel.innerHTML = `
-      <div class="compare-head">
-        <h3>Head to head</h3>
-        <button class="compare-clear" id="clearCompare">Clear</button>
-      </div>
+      <div class="compare-head"><h3>Head to head</h3><button class="compare-clear" id="clearCompare">Clear</button></div>
       <div class="compare-grid">
         <div class="compare-col"><div class="cc-name">${escapeHtml(a.name)}</div><div class="cc-score">${a.score} / 100 &middot; ${getRank(a.score).title}</div></div>
         <div class="compare-col"><div class="cc-name">${escapeHtml(b.name)}</div><div class="cc-score">${b.score} / 100 &middot; ${getRank(b.score).title}</div></div>
         <div class="compare-full">${rows}</div>
       </div>
     `;
-    document.getElementById('clearCompare').addEventListener('click', () => {
-      compareIds = [];
-      renderAll();
-    });
+    document.getElementById('clearCompare').addEventListener('click', () => { compareIds = []; renderAll(); });
   }
 
   function renderReviews(){
@@ -623,16 +684,12 @@
       reviewsHolder.innerHTML = `
         <div class="empty-state glass">
           <span class="em">Nothing logged yet.</span>
-          Rate a plate above and it'll show up here, forever judged.
+          Be the first to rate a plate. It'll show up here for everyone.
         </div>`;
       return;
     }
     if(list.length === 0){
-      reviewsHolder.innerHTML = `
-        <div class="empty-state glass">
-          <span class="em">No plates in this tier.</span>
-          Try a different filter.
-        </div>`;
+      reviewsHolder.innerHTML = `<div class="empty-state glass"><span class="em">No plates in this tier.</span>Try a different filter.</div>`;
       return;
     }
 
@@ -653,12 +710,14 @@
 
       const isChecked = compareIds.includes(r.id);
       const compareDisabled = (compareIds.length >= 2 && !isChecked);
+      const canDelete = mySessionIds.has(r.id);
 
       card.innerHTML = `
         <div class="review-top">
           <div>
             <p class="review-name">${escapeHtml(r.name)}</p>
             <p class="review-source">${escapeHtml(r.source || 'Source unlisted')}</p>
+            <p class="review-meta">${escapeHtml(r.reviewerName || 'Anonymous')} &middot; ${formatDate(r.eatenDate)}</p>
           </div>
           <div class="score-badge" style="--badge-color:${rank.color}"><span>${r.score}</span></div>
         </div>
@@ -671,7 +730,7 @@
             <input type="checkbox" data-id="${r.id}" ${isChecked ? 'checked' : ''} ${compareDisabled ? 'disabled' : ''}>
             Compare
           </label>
-          <button class="delete-btn" data-id="${r.id}">strike from record</button>
+          ${canDelete ? `<button class="delete-btn" data-id="${r.id}">strike from record</button>` : ''}
         </div>
       `;
       grid.appendChild(card);
@@ -681,22 +740,34 @@
     reviewsHolder.appendChild(grid);
 
     reviewsHolder.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = Number(btn.getAttribute('data-id'));
-        const idx = reviews.findIndex(r => r.id === id);
-        if(idx > -1){ reviews.splice(idx, 1); }
-        compareIds = compareIds.filter(cid => cid !== id);
-        renderAll();
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        btn.textContent = 'removing...';
+        btn.disabled = true;
+        try{
+          if(isConfigured){
+            const { error } = await sb.from('reviews').delete().eq('id', id);
+            if(error) throw error;
+          }
+          reviews = reviews.filter(r => String(r.id) !== String(id));
+          compareIds = compareIds.filter(cid => String(cid) !== String(id));
+          mySessionIds.delete(id);
+          renderAll();
+        } catch(err){
+          showStatus(`Couldn't delete that entry (${escapeHtml(err.message || 'unknown error')}).`);
+          btn.textContent = 'strike from record';
+          btn.disabled = false;
+        }
       });
     });
 
     reviewsHolder.querySelectorAll('.compare-check input').forEach(box => {
       box.addEventListener('change', () => {
-        const id = Number(box.getAttribute('data-id'));
+        const id = box.getAttribute('data-id');
         if(box.checked){
-          if(compareIds.length < 2) compareIds.push(id);
+          if(compareIds.length < 2) compareIds.push(reviews.find(r => String(r.id) === String(id)).id);
         } else {
-          compareIds = compareIds.filter(cid => cid !== id);
+          compareIds = compareIds.filter(cid => String(cid) !== String(id));
         }
         renderAll();
       });
@@ -711,42 +782,72 @@
   }
 
   sortSelect.addEventListener('change', () => { sortMode = sortSelect.value; renderAll(); });
+  refreshBtn.addEventListener('click', loadReviews);
 
-  saveBtn.addEventListener('click', () => {
+  saveBtn.addEventListener('click', async () => {
     const nameInput = document.getElementById('dishName');
     const sourceInput = document.getElementById('dishSource');
+    const reviewerInput = document.getElementById('reviewerName');
     const textInput = document.getElementById('reviewText');
 
     const name = nameInput.value.trim();
-    if(!name){
-      formMsg.textContent = 'Give the plate a name first. It earned that much.';
-      nameInput.focus();
-      return;
-    }
+    const reviewerName = reviewerInput.value.trim();
+
+    if(!name){ formMsg.textContent = 'Give the plate a name first. It earned that much.'; nameInput.focus(); return; }
+    if(!reviewerName){ formMsg.textContent = 'Add your name so people know whose taste to trust.'; reviewerInput.focus(); return; }
     formMsg.textContent = '';
 
     const ratingsSnapshot = {};
     CATEGORIES.forEach(cat => { ratingsSnapshot[cat.key] = state[cat.key]; });
+    const score = currentScore();
+    const personality = getPersonality(ratingsSnapshot);
 
-    reviews.unshift({
-      id: Date.now(),
-      name,
+    const payload = {
+      dish_name: name,
       source: sourceInput.value.trim(),
-      text: textInput.value.trim(),
-      ratings: ratingsSnapshot,
-      score: currentScore(),
-      personality: getPersonality(ratingsSnapshot),
-    });
+      reviewer_name: reviewerName,
+      eaten_date: eatenDateInput.value || null,
+      review_text: textInput.value.trim(),
+      score, personality,
+      masala: ratingsSnapshot.masala, rice: ratingsSnapshot.rice, ratio: ratingsSnapshot.ratio,
+      dum: ratingsSnapshot.dum, heat: ratingsSnapshot.heat, value: ratingsSnapshot.value,
+    };
 
-    renderAll();
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Logging...';
 
-    nameInput.value = '';
-    sourceInput.value = '';
-    textInput.value = '';
-    nameInput.focus();
+    try{
+      let newReview;
+      if(isConfigured){
+        const { data, error } = await sb.from('reviews').insert(payload).select().single();
+        if(error) throw error;
+        newReview = rowToReview(data);
+      } else {
+        newReview = {
+          id: 'local-' + Date.now(),
+          name, source: payload.source, reviewerName, eatenDate: payload.eaten_date,
+          text: payload.review_text, ratings: ratingsSnapshot, score, personality,
+          createdAt: new Date().toISOString(),
+        };
+      }
+      mySessionIds.add(newReview.id);
+      reviews.unshift(newReview);
+      renderAll();
+
+      nameInput.value = '';
+      sourceInput.value = '';
+      textInput.value = '';
+      nameInput.focus();
+    } catch(err){
+      formMsg.textContent = `Couldn't save that (${err.message || 'unknown error'}).`;
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Log this plate';
+    }
   });
 
   buildFilterChips();
+  loadReviews();
 </script>
 
 </body>
